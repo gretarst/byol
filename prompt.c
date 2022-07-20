@@ -1,29 +1,46 @@
+#include "mpc.h"
 #include <stdio.h>
+#include <stdlib.h>
 
-/* declare a buffer for user input of size 2048 */
-static char input[2048];
+#include <editline/readline.h>
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
 
-    /* print version and exit information */
-    puts("Lispy Version 0.0.0.0.1");
-    puts("Press Ctrl+C to Exit\n");
+  /* create some parsers */
+  mpc_parser_t *Number = mpc_new("number");
+  mpc_parser_t *Operator = mpc_new("operator");
+  mpc_parser_t *Expr = mpc_new("expr");
+  mpc_parser_t *Lispy = mpc_new("lispy");
 
-    /* in a never ending loop */
+  /* define them with the following language */
+  mpca_lang(MPCA_LANG_DEFAULT,
+  "                                                     \
+    number   : /-?[0-9]+/ ;                             \
+    operator : '+' | '-' | '*' | '/' ;                  \
+    expr     : <number> | '(' <operator> <expr>+ ')' ;  \
+    lispy    : /^/ <operator> <expr>+ /$/ ;             \
+  ", Number, Operator, Expr, Lispy);
 
-    while (1)
-    {
+  /* print version and exit information */
+  puts("Lispy Version 0.0.0.0.1");
+  puts("Press Ctrl+C to Exit\n");
 
-        /* output our prompt */
-        fputs("lispy> ", stdout);
+  /* in a never ending loop */
 
-        /* read a line of user input of maximum size 2048 */
-        fgets(input, 2048, stdin);
+  while (1) {
 
-        /* echo input back to user */
-        printf("No you're a %s", input);
-    }
+    /* output our prompt and get input */
+    char *input = readline("lispy> ");
 
-    return 0;
+    /* add input to history */
+    add_history(input);
+
+    /* echo input back to user */
+    printf("No you're a %s\n", input);
+
+    /* free retrieved input */
+    free(input);
+  }
+
+  return 0;
 }
